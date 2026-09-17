@@ -1,24 +1,68 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PrevButton from "../components/PrevButton";
 import InfoInput from "../components/InfoInput";
 import AddButton from "../components/AddButton";
 import Button from "../components/Button";
 
-const Info = () => {
+const Info = ({ sendIngredientList }) => {
   // logic
   const history = useNavigate();
 
-  // TODO: set함수 추가하기
-  const [ingredientList] = useState([]); // 사용자가 입력할 재료 목록
+  // TODO: set함수 추가하기 - setIngredientList
+  const [ingredientList, setIngredientList] = useState([]); // 사용자가 입력할 재료 목록
 
   const addIngredient = () => {
     console.log("재료 추가하기");
+    const id = Date.now(); // 현재 시각으로 설정
+    const newItem = {
+      id,
+      label: `ingredient-${id}`,
+      text: "재료명",
+      value: "",
+    };
+
+    // setIngredientList([...ingredientList, newItem]);
+
+    // state값 변경
+    setIngredientList((prev) => [...prev, newItem]);
+  };
+
+  const handleRemove = (selectedID) => {
+    // console.log("chat페이지로 이동");
+    console.log("🚀 ~ handleRemove ~ selectedID:", selectedID);
+
+    // history("/chat");
+
+    // 사용자가 클릭한 요소를 제외한 모든 요소들의 배열
+    const filterIngredientList = ingredientList.filter(
+      (ingredient) => ingredient.id !== selectedID,
+    );
+    setIngredientList(filterIngredientList);
+  };
+
+  const handleChange = (data) => {
+    // console.log("🚀 ~ handleChange ~ data:", data);
+    const changeList = ingredientList.map((ingredient) =>
+      ingredient.id === data.id ? data : ingredient,
+    );
+    setIngredientList(changeList);
+  };
+
+  // state 변경이 일어나면 실행
+  useEffect(() => {
+    console.log("🚀 ~ Info ~ ingredientList:", ingredientList);
+  }, [ingredientList]);
+
+  const handleSubmit = (event) => {
+    // 폼 제출 시 페이지 새로고침 막기
+    event.preventDefault();
   };
 
   const handleNext = () => {
-    // console.log("chat페이지로 이동");
+    sendIngredientList(ingredientList);
 
+    // console.log("chat페이지로 이동");
     // 미션: chat 페이지로 이동 구현
     history("/chat");
   };
@@ -41,11 +85,16 @@ const Info = () => {
 
         {/* START:form 영역 */}
         <div className="mt-20 overflow-auto">
-          <form>
+          <form onSubmit={(event) => handleSubmit(event)}>
             {/* START:input 영역 */}
             <div>
               {ingredientList.map((item) => (
-                <InfoInput key={item.id} content={item} />
+                <InfoInput
+                  key={item.id}
+                  content={item}
+                  onRemove={handleRemove}
+                  onChange={handleChange}
+                />
               ))}
             </div>
             {/* END:input 영역 */}

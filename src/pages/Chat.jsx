@@ -3,8 +3,10 @@ import MessageBox from "../components/MessageBox";
 import PrevButton from "../components/PrevButton";
 import { MoonLoader } from "react-spinners";
 
-const Chat = () => {
+// 미션: Chat에서 App에 있던 ingredientList 데이터를 props로 받아서 콘솔에 찍어보기
+const Chat = (data) => {
   // logic
+  console.log(data);
 
   const [value, setValue] = useState("");
 
