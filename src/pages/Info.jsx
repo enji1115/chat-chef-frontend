@@ -12,8 +12,21 @@ const Info = ({ sendIngredientList }) => {
   // TODO: set함수 추가하기 - setIngredientList
   const [ingredientList, setIngredientList] = useState([]); // 사용자가 입력할 재료 목록
 
+  // input 값이 바뀔 때
+  const handleChange = (data) => {
+    // console.log("🚀 ~ handleChange ~ data:", data);
+    const changeList = ingredientList.map((ingredient) =>
+      ingredient.id === data.id ? data : ingredient,
+    );
+    setIngredientList(changeList);
+  };
+  // state 변경이 일어나면 실행
+  useEffect(() => {
+    // console.log("🚀 ~ Info ~ ingredientList:", ingredientList);
+  }, [ingredientList]);
+
+  // 재료 추가하기
   const addIngredient = () => {
-    console.log("재료 추가하기");
     const id = Date.now(); // 현재 시각으로 설정
     const newItem = {
       id,
@@ -28,12 +41,8 @@ const Info = ({ sendIngredientList }) => {
     setIngredientList((prev) => [...prev, newItem]);
   };
 
+  // 재료 삭제하기 - InfoInput에 보냄
   const handleRemove = (selectedID) => {
-    // console.log("chat페이지로 이동");
-    console.log("🚀 ~ handleRemove ~ selectedID:", selectedID);
-
-    // history("/chat");
-
     // 사용자가 클릭한 요소를 제외한 모든 요소들의 배열
     const filterIngredientList = ingredientList.filter(
       (ingredient) => ingredient.id !== selectedID,
@@ -41,30 +50,14 @@ const Info = ({ sendIngredientList }) => {
     setIngredientList(filterIngredientList);
   };
 
-  const handleChange = (data) => {
-    // console.log("🚀 ~ handleChange ~ data:", data);
-    const changeList = ingredientList.map((ingredient) =>
-      ingredient.id === data.id ? data : ingredient,
-    );
-    setIngredientList(changeList);
-  };
-
-  // state 변경이 일어나면 실행
-  useEffect(() => {
-    console.log("🚀 ~ Info ~ ingredientList:", ingredientList);
-  }, [ingredientList]);
-
-  const handleSubmit = (event) => {
-    // 폼 제출 시 페이지 새로고침 막기
-    event.preventDefault();
-  };
-
   const handleNext = () => {
+    // 미션: chat페이지로 이동 구현
     // 입력값이 있는 배열
     const filterDataList = ingredientList.filter(
       (item) => item.value.trim() !== "",
     );
-    console.log("🚀filterDataList:", filterDataList);
+    // console.log("🚀filterDataList:", filterDataList);
+
     if (filterDataList.length) {
       // 재료 입력값이 있는 경우
       sendIngredientList(ingredientList);
@@ -74,6 +67,11 @@ const Info = ({ sendIngredientList }) => {
 
     // 재료 입력값이 없는 경우
     alert("재료를 최소 1개이상 입력해주세요");
+  };
+
+  const handleSubmit = (event) => {
+    // 폼 제출 시 페이지 새로고침 막기
+    event.preventDefault();
   };
 
   // view

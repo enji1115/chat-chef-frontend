@@ -17,6 +17,7 @@ const MessageBox = ({ messages, isLoading }) => {
   // view
   return (
     <>
+      {/* messages를 통으로 가져와서 map으로 돌림 */}
       {messages.map((data, index) => (
         <div key={index}>
           {data.role === "user" ? (
@@ -44,6 +45,7 @@ const MessageBox = ({ messages, isLoading }) => {
           )}
         </div>
       ))}
+      {/* isLoading이 false면 안 보여짐, true면 UI를 보여줌 */}
       {isLoading && (
         <div className="py-4 max-w-3/4 flex">
           <div className="min-w-10 w-10 max h-10 bg-chef-green-500 rounded-full overflow-hidden">

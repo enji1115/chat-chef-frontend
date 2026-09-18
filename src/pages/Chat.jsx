@@ -1,29 +1,129 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import MessageBox from "../components/MessageBox";
 import PrevButton from "../components/PrevButton";
 import { MoonLoader } from "react-spinners";
 
 // 미션: Chat에서 App에 있던 ingredientList 데이터를 props로 받아서 콘솔에 찍어보기
-const Chat = (ingredientList) => {
+const Chat = ({ ingredientList }) => {
   // logic
-  console.log(ingredientList);
-
+  const endpoint = process.env.REACT_APP_SERVER_ADDRESS;
   const [value, setValue] = useState("");
 
   // TODO: set함수 추가하기
-  const [messages] = useState([]); // chatGPT와 사용자의 대화 메시지 배열
-  const [isInfoLoading] = useState(false); // 최초 정보 요청시 로딩
-  const [isMessageLoading] = useState(true); // 사용자와 메시지 주고 받을때 로딩
+  const [messages, setMessages] = useState([]); // chatGPT와 사용자의 대화 메시지 배열
+  const [isInfoLoading, setIsInfoLoading] = useState(true); // 최초 정보 요청시 로딩
+  const [isMessageLoading, setIsMessageLoading] = useState(false); // 사용자와 메시지 주고 받을때 로딩
+  const [infoMessages, setInfoMessages] = useState([]); // 초기 메시지 배열(system, user)
+
+  // 보내려는 input 값이 바뀔 때
   const hadleChange = (event) => {
     const { value } = event.target;
-    console.log("value==>", value);
+    // console.log("value==>", value);
     setValue(value);
   };
 
+  // 메시지 보내기
+  const sendMessage = async (userMessage) => {
+    setIsMessageLoading(true);
+    try {
+      const response = await fetch(`${endpoint}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userMessage,
+          messages: [...infoMessages, ...messages],
+        }),
+      });
+
+      const result = await response.json();
+
+      // chatGPT의 답변 추가
+      const { role, content } = result.data;
+      const assistantMessage = { role, content };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // console.log("🚀 ~ sendMessage ~ result:", result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      // try 혹은 error 구문 실행후 실행되는 곳
+      setIsMessageLoading(false);
+    }
+  };
+  // 메시지 보내기
   const hadleSubmit = (event) => {
     event.preventDefault();
-    console.log("메시지 보내기");
+
+    // message API 호출
+    const userMessage = {
+      role: "user",
+      content: value.trim(),
+    };
+    // console.log("🚀 ~ hadleSubmit ~ userMessage:", userMessage);
+
+    // Messages 데이터 업데이트 (유저 메시지 추가)
+    setMessages((prev) => [...prev, userMessage]);
+
+    // 메시지 입력값 초기화
+    setValue("");
+
+    // message API 호출
+    sendMessage(userMessage);
   };
+
+  // 초기 세팅 API 호출
+  const sendInfo = async (data) => {
+    setIsInfoLoading(true);
+    // 서버의 API
+    // app.post("/recipe", async (req, res) => {
+    // const { ingredientList } = req.body;
+
+    try {
+      // 백엔드에 /recipe 요청 - 응답된 값은 response에 받기 (응답을 받아올 때 까지 대기 / 비동기 처리)
+      const response = await fetch(`${endpoint}/recipe`, {
+        // 요청을 보내는 데이터
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, // json형식으로 주고 받는다
+        body: JSON.stringify({ ingredientList: data }), // json은 사실 텍스트라서, 객체를 텍스트 형태로 변환해서 보내야 한다
+      });
+
+      // JSON 텍스트로 받아온 응답을 객체로 변환
+      const result = await response.json();
+      // console.log("🚀 ~ sendInfo ~ result:", result);
+
+      // 데이터가 잘 들어오지 않은 경우 뒤에 코드 무시
+      if (!result.data) return;
+
+      // 마지막 요소 제거된 메시지 배열
+      const removeLastDataList = result.data.filter(
+        (_, index, array) => array.length - 1 !== index,
+      );
+      // 초기 메시지 배열에 저장
+      setInfoMessages(removeLastDataList);
+
+      // 첫 assistant답변(result의 맨 마지막 데이터) UI에 추가
+      const { role, content } = result.data[result.data.length - 1];
+
+      // prev: 배열
+      setMessages((prev) => [...prev, { role, content }]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      // 로딩 삭제
+      setIsInfoLoading(false);
+    }
+  };
+
+  // 미션: infoMessages가 변경됐을 때 콘솔에 찍어보기
+  // useEffect(() => {
+  //   console.log(infoMessages);
+  // }, [infoMessages]);
+
+  // 페이지에 진입했을 때 딱 한 번 실행
+  useEffect(() => {
+    sendInfo(ingredientList);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // view
   return (
@@ -42,7 +142,7 @@ const Chat = (ingredientList) => {
       {/* END:뒤로가기 버튼 */}
       <div className="h-full flex flex-col">
         {/* START:헤더 영역 */}
-        <div className="-mx-6 -mt-10 py-7 bg-chef-green-500">
+        <div className="-mx-6 -mt-10 py-6 bg-chef-green-500">
           <span className="block text-xl text-center text-white">
             맛있는 쉐프
           </span>
